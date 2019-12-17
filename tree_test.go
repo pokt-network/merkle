@@ -8,10 +8,13 @@ import (
 
 const (
 	numOfLeaves = 8
-	index       = 0
+	index       = 1
 )
 
-var data [][]byte
+var (
+	data     [][]byte
+	mockLeaf = []byte("bar")
+)
 
 func TestGenerateRoot(t *testing.T) {
 	genData()
@@ -30,8 +33,12 @@ func TestVerifyProof(t *testing.T) {
 	root := GenerateRoot(data)
 	genData() // resets data
 	proof := GenerateProof(data, index)
-	defer profile.Start(profile.MemProfile).Stop()
-	if !VerifyProof(root, []byte("foo"), proof) {
+	p := profile.Start(profile.MemProfile)
+	if !VerifyProof(root, mockLeaf, proof) {
+		t.Fatalf("proof invalid")
+	}
+	p.Stop()
+	if VerifyProof(root, []byte("foo"), proof) {
 		t.Fatalf("proof invalid")
 	}
 }
@@ -39,6 +46,10 @@ func TestVerifyProof(t *testing.T) {
 func genData() {
 	data = nil
 	for i := 0; i < numOfLeaves; i++ {
+		if i == index {
+			data = append(data, mockLeaf)
+			continue
+		}
 		data = append(data, []byte("foo"))
 	}
 }
